@@ -25,7 +25,7 @@ uint8_t current_project;  // Current CIRCUIT project
 uint8_t preset_1;
 uint8_t preset_2;
 // Flags
-bool merge_mode = true;          // "Merge mode" sends data from channel 4 to MERGE_MODE_OUTPUT_CHANNEL
+bool merge_mode = false;         // "Merge mode" sends data from channel 4 to MERGE_MODE_OUTPUT_CHANNEL
 bool mode_patch_select = false;  // Patch selection mode
 bool merged_output_has_preset_1 = false;
 
