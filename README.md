@@ -95,7 +95,7 @@ Install via Arduino Library Manager: Sketch > Include Library > Manage Libraries
 
 ## Credits
 
-Original concept and initial code by [TODO: Original author - please help identify!]. If you know the original author (posted on r/NovationCircuit with a YouTube demo), please open an issue.
+Original concept and initial code by [Provokator](https://www.youtube.com/@Provokator) (Reddit: u/Capable-Laugh-9312).
 
 Bugfixes and enhancements by Patrick Hubers.
 
