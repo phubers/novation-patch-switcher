@@ -6,21 +6,19 @@ MIDI_CREATE_DEFAULT_INSTANCE();
 // Define MIDI input channels
 #define MIDI_INPUT_CHANNEL_1 3
 #define MIDI_INPUT_CHANNEL_2 4
-// Define MIDI output channels for primary synths (MM2)
+// Define MIDI output channels (synths 1-2 active in 2-synth mode, all four in 4-synth mode)
 #define MIDI_OUTPUT_CHANNEL_1 3
 #define MIDI_OUTPUT_CHANNEL_2 4
-// Define MIDI output channels for secondary synths (S-1, MiniNova)
-#define MIDI_OUTPUT_CHANNEL_S1 5
-#define MIDI_OUTPUT_CHANNEL_MININOVA 6
+#define MIDI_OUTPUT_CHANNEL_3 5
+#define MIDI_OUTPUT_CHANNEL_4 6
 // Channel for merge mode via one of the output channels
 #define MERGE_MODE_OUTPUT_CHANNEL MIDI_OUTPUT_CHANNEL_1
 // Channel for switching between projects
 #define PROJECT_SWITCH_CHANNEL 16
-// EEPROM layout: 64 bytes per synth
-// 0-63: MM2 track 1, 64-127: MM2 track 2, 128-191: S-1, 192-255: MiniNova
+// EEPROM layout: 64 bytes per synth (0-63, 64-127, 128-191, 192-255)
 #define EEPROM_PRESET_2_OFFSET 64
-#define EEPROM_S1_OFFSET 128
-#define EEPROM_MININOVA_OFFSET 192
+#define EEPROM_PRESET_3_OFFSET 128
+#define EEPROM_PRESET_4_OFFSET 192
 // CC number for master filter (used to enter patch select mode)
 #define CC_MASTER_FILTER 0x4A
 // Note sent during patch select mode for auditioning
@@ -32,10 +30,10 @@ MIDI_CREATE_DEFAULT_INSTANCE();
 
 // Variables
 uint8_t current_project;  // Current CIRCUIT project
-uint8_t preset_1;         // MM2 track 1
-uint8_t preset_2;         // MM2 track 2
-uint8_t preset_s1;        // S-1
-uint8_t preset_mininova;  // MiniNova
+uint8_t preset_1;
+uint8_t preset_2;
+uint8_t preset_3;
+uint8_t preset_4;
 // Flags
 bool merge_mode = false;         // "Merge mode" sends data from channel 4 to MERGE_MODE_OUTPUT_CHANNEL
 bool mode_patch_select = false;  // Patch selection mode
@@ -97,10 +95,10 @@ void handleProgramChange(uint8_t channel, uint8_t project) {
     MIDI.sendProgramChange(preset_2, MIDI_OUTPUT_CHANNEL_2);
 
     if (four_synth_mode) {
-      preset_s1 = EEPROM.read(mapped_project + EEPROM_S1_OFFSET);
-      preset_mininova = EEPROM.read(mapped_project + EEPROM_MININOVA_OFFSET);
-      MIDI.sendProgramChange(preset_s1, MIDI_OUTPUT_CHANNEL_S1);
-      MIDI.sendProgramChange(preset_mininova, MIDI_OUTPUT_CHANNEL_MININOVA);
+      preset_3 = EEPROM.read(mapped_project + EEPROM_PRESET_3_OFFSET);
+      preset_4 = EEPROM.read(mapped_project + EEPROM_PRESET_4_OFFSET);
+      MIDI.sendProgramChange(preset_3, MIDI_OUTPUT_CHANNEL_3);
+      MIDI.sendProgramChange(preset_4, MIDI_OUTPUT_CHANNEL_4);
     }
   }
 }
@@ -109,8 +107,8 @@ void handleProgramChange(uint8_t channel, uint8_t project) {
 void handleNoteOn(byte channel, byte note, byte velocity) {
   static uint8_t prev_preset_1;
   static uint8_t prev_preset_2;
-  static uint8_t prev_preset_s1;
-  static uint8_t prev_preset_mininova;
+  static uint8_t prev_preset_3;
+  static uint8_t prev_preset_4;
 
   if (channel == MIDI_INPUT_CHANNEL_1) {
     if (merge_mode) {
@@ -121,15 +119,15 @@ void handleNoteOn(byte channel, byte note, byte velocity) {
     }
     if (mode_patch_select) {
       if (four_synth_mode && note >= 64) {
-        // 4-synth mode: Notes 64-127 -> S-1
-        preset_s1 = note - 64;
-        if (prev_preset_s1 != preset_s1) {
-          MIDI.sendProgramChange(preset_s1, MIDI_OUTPUT_CHANNEL_S1);
-          EEPROM.write(current_project + EEPROM_S1_OFFSET, preset_s1);
-          prev_preset_s1 = preset_s1;
+        // 4-synth mode: Notes 64-127 -> synth 3
+        preset_3 = note - 64;
+        if (prev_preset_3 != preset_3) {
+          MIDI.sendProgramChange(preset_3, MIDI_OUTPUT_CHANNEL_3);
+          EEPROM.write(current_project + EEPROM_PRESET_3_OFFSET, preset_3);
+          prev_preset_3 = preset_3;
         }
       } else {
-        // 2-synth mode: all notes, or 4-synth mode: notes 0-63 -> MM2 track 1
+        // 2-synth mode: all notes, or 4-synth mode: notes 0-63 -> synth 1
         preset_1 = note;  // both cases: direct mapping
         if (prev_preset_1 != note) {
           MIDI.sendProgramChange(preset_1, MIDI_OUTPUT_CHANNEL_1);
@@ -151,15 +149,15 @@ void handleNoteOn(byte channel, byte note, byte velocity) {
     }
     if (mode_patch_select) {
       if (four_synth_mode && note >= 64) {
-        // 4-synth mode: Notes 64-127 -> MiniNova
-        preset_mininova = note - 64;
-        if (prev_preset_mininova != preset_mininova) {
-          MIDI.sendProgramChange(preset_mininova, MIDI_OUTPUT_CHANNEL_MININOVA);
-          EEPROM.write(current_project + EEPROM_MININOVA_OFFSET, preset_mininova);
-          prev_preset_mininova = preset_mininova;
+        // 4-synth mode: Notes 64-127 -> synth 4
+        preset_4 = note - 64;
+        if (prev_preset_4 != preset_4) {
+          MIDI.sendProgramChange(preset_4, MIDI_OUTPUT_CHANNEL_4);
+          EEPROM.write(current_project + EEPROM_PRESET_4_OFFSET, preset_4);
+          prev_preset_4 = preset_4;
         }
       } else {
-        // 2-synth mode: all notes, or 4-synth mode: notes 0-63 -> MM2 track 2
+        // 2-synth mode: all notes, or 4-synth mode: notes 0-63 -> synth 2
         preset_2 = note;
         if (prev_preset_2 != note) {
           MIDI.sendProgramChange(preset_2, MIDI_OUTPUT_CHANNEL_2);
