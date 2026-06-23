@@ -107,7 +107,6 @@ void handleProgramChange(uint8_t channel, uint8_t project) {
   {
     // CT sends 0-63 for immediate, 64-127 for delayed (at pattern end)
     // Map to 0-63 range for synths with only 64 presets
-    bool delayed = project >= 64;
     uint8_t mapped_project = project % 64;
 
     current_project = mapped_project;  // 0 - 63
@@ -200,7 +199,7 @@ void handleNoteOn(byte channel, byte note, byte velocity) {
 void handleNoteOff(byte channel, byte note, byte velocity) {
   if (channel == MIDI_INPUT_CHANNEL_1) {
     if (mode_patch_select) {
-      // Audition note only for MM2 (2-synth mode: all notes, 4-synth mode: notes 0-63)
+      // Audition note only for synth 1 (2-synth mode: all notes, 4-synth mode: notes 0-63)
       if (!four_synth_mode || note < 64) {
         MIDI.sendNoteOff(AUDITION_NOTE, velocity, MIDI_OUTPUT_CHANNEL_1);
       }
@@ -208,22 +207,28 @@ void handleNoteOff(byte channel, byte note, byte velocity) {
       MIDI.sendNoteOff(note, velocity, channel);
     }
   } else if (channel == MIDI_INPUT_CHANNEL_2) {
-    if (merge_mode) {
-      channel = MERGE_MODE_OUTPUT_CHANNEL;
-    }
+    byte output_channel = merge_mode ? MERGE_MODE_OUTPUT_CHANNEL : MIDI_OUTPUT_CHANNEL_2;
     if (mode_patch_select) {
-      // Audition note only for MM2 (2-synth mode: all notes, 4-synth mode: notes 0-63)
+      // Audition note only for synth 2 (2-synth mode: all notes, 4-synth mode: notes 0-63)
       if (!four_synth_mode || note < 64) {
-        MIDI.sendNoteOff(AUDITION_NOTE, velocity, MIDI_OUTPUT_CHANNEL_2);
+        MIDI.sendNoteOff(AUDITION_NOTE, velocity, output_channel);
       }
     } else {
-      MIDI.sendNoteOff(note, velocity, channel);
+      MIDI.sendNoteOff(note, velocity, output_channel);
     }
   }
 }
 
 // Control Change (CC) handler
 void handleControlChange(byte channel, byte control, byte value) {
+  // Filter knob patch select (only if button mode disabled)
+  // Check this BEFORE channel gets reassigned
+  if (!USE_BUTTON_FOR_PATCH_SELECT) {
+    if (channel == PROJECT_SWITCH_CHANNEL && control == CC_MASTER_FILTER) {
+      mode_patch_select = (value == 0x00);
+    }
+  }
+
   if (channel == MIDI_INPUT_CHANNEL_1) {
     MIDI.sendControlChange(control, value, channel);
   } else if (channel == MIDI_INPUT_CHANNEL_2) {
@@ -231,14 +236,6 @@ void handleControlChange(byte channel, byte control, byte value) {
       channel = MERGE_MODE_OUTPUT_CHANNEL;
     }
     MIDI.sendControlChange(control, value, channel);
-  }
-  // Filter knob patch select (only if button mode disabled)
-  if (!USE_BUTTON_FOR_PATCH_SELECT) {
-    if (channel == PROJECT_SWITCH_CHANNEL && control == CC_MASTER_FILTER && value == 0x00) {
-      mode_patch_select = true;
-    } else {
-      mode_patch_select = false;
-    }
   }
 }
 
