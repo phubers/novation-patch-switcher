@@ -29,9 +29,9 @@ MIDI_CREATE_DEFAULT_INSTANCE();
 #define MODE_LED_PIN LED_BUILTIN
 
 // Configuration: patch select trigger
+// false = use filter knob at minimum (original behavior, no hardware needed)
 // true = use button (hold at boot: toggle synth mode, press while running: toggle patch select)
-// false = use filter knob at minimum (original behavior)
-#define USE_BUTTON_FOR_PATCH_SELECT true
+#define USE_BUTTON_FOR_PATCH_SELECT false
 
 // Variables
 uint8_t current_project;  // Current CIRCUIT project

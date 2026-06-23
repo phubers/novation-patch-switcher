@@ -50,13 +50,13 @@ This Arduino sketch sits between the Circuit Tracks and your external synths. It
 
 Two methods available (set `USE_BUTTON_FOR_PATCH_SELECT` in code):
 
-**Button mode** (default, `USE_BUTTON_FOR_PATCH_SELECT = true`):
+**Button mode** (`USE_BUTTON_FOR_PATCH_SELECT = true`):
 1. Press the button to enter patch select mode (LED turns on)
 2. Select a MIDI track on the CT
 3. Play pads to select presets
 4. Press the button again to exit (LED turns off)
 
-**Filter knob mode** (`USE_BUTTON_FOR_PATCH_SELECT = false`):
+**Filter knob mode** (default, `USE_BUTTON_FOR_PATCH_SELECT = false`):
 1. Turn the **master filter knob to minimum** (fully left) on the CT
 2. Select a MIDI track on the CT
 3. Play pads to select presets
