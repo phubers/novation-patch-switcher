@@ -78,14 +78,14 @@ Use the **Note Expand** button to access all 128 notes across 4 pages (32 notes 
 
 ## MIDI Channel Mapping
 
-| Mode | CT Track | Note Range | Output Channel | Synth |
-|------|----------|------------|----------------|-------|
-| 2-synth | MIDI 1 | 0-127 | 3 | Synth 1 |
-| 2-synth | MIDI 2 | 0-127 | 4 | Synth 2 |
-| 4-synth | MIDI 1 | 0-63 | 3 | Synth 1 |
-| 4-synth | MIDI 1 | 64-127 | 5 | Synth 3 |
-| 4-synth | MIDI 2 | 0-63 | 4 | Synth 2 |
-| 4-synth | MIDI 2 | 64-127 | 6 | Synth 4 |
+| Mode | CT Track | Note Range | Output Channel | Synth | Patch Sent |
+|------|----------|------------|----------------|-------|------------|
+| 2-synth | MIDI 1 | 0-127 | 3 | Synth 1 | 0-127 |
+| 2-synth | MIDI 2 | 0-127 | 4 | Synth 2 | 0-127 |
+| 4-synth | MIDI 1 | 0-63 | 3 | Synth 1 | 0-63 |
+| 4-synth | MIDI 1 | 64-127 | 5 | Synth 3 | 0-63 |
+| 4-synth | MIDI 2 | 0-63 | 4 | Synth 2 | 0-63 |
+| 4-synth | MIDI 2 | 64-127 | 6 | Synth 4 | 0-63 |
 
 ## Dependencies
 
