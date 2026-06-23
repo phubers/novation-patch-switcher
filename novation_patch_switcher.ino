@@ -26,7 +26,12 @@ MIDI_CREATE_DEFAULT_INSTANCE();
 
 // Hardware pins for mode switch
 #define MODE_BUTTON_PIN 2
-#define MODE_LED_PIN 3
+#define MODE_LED_PIN LED_BUILTIN
+
+// Configuration: patch select trigger
+// true = use button (hold at boot: toggle synth mode, press while running: toggle patch select)
+// false = use filter knob at minimum (original behavior)
+#define USE_BUTTON_FOR_PATCH_SELECT true
 
 // Variables
 uint8_t current_project;  // Current CIRCUIT project
@@ -44,7 +49,24 @@ void setup() {
   // Mode button and LED
   pinMode(MODE_BUTTON_PIN, INPUT_PULLUP);
   pinMode(MODE_LED_PIN, OUTPUT);
-  digitalWrite(MODE_LED_PIN, four_synth_mode ? HIGH : LOW);
+
+  // Check if button held at boot -> toggle synth mode
+  if (USE_BUTTON_FOR_PATCH_SELECT && digitalRead(MODE_BUTTON_PIN) == LOW) {
+    four_synth_mode = !four_synth_mode;
+    // Blink LED to confirm mode change
+    for (int i = 0; i < (four_synth_mode ? 4 : 2); i++) {
+      digitalWrite(MODE_LED_PIN, HIGH);
+      delay(150);
+      digitalWrite(MODE_LED_PIN, LOW);
+      delay(150);
+    }
+    // Wait for button release
+    while (digitalRead(MODE_BUTTON_PIN) == LOW) {
+      delay(10);
+    }
+  }
+
+  digitalWrite(MODE_LED_PIN, LOW);
 
   // MIDI initialization
   MIDI.begin(MIDI_CHANNEL_OMNI);
@@ -64,14 +86,16 @@ void setup() {
 }
 
 void loop() {
-  // Check mode button
-  static bool last_button_state = HIGH;
-  bool button_state = digitalRead(MODE_BUTTON_PIN);
-  if (last_button_state == HIGH && button_state == LOW) {
-    four_synth_mode = !four_synth_mode;
-    digitalWrite(MODE_LED_PIN, four_synth_mode ? HIGH : LOW);
+  // Check mode button for patch select toggle (only if button mode enabled)
+  if (USE_BUTTON_FOR_PATCH_SELECT) {
+    static bool last_button_state = HIGH;
+    bool button_state = digitalRead(MODE_BUTTON_PIN);
+    if (last_button_state == HIGH && button_state == LOW) {
+      mode_patch_select = !mode_patch_select;
+      digitalWrite(MODE_LED_PIN, mode_patch_select ? HIGH : LOW);
+    }
+    last_button_state = button_state;
   }
-  last_button_state = button_state;
 
   // MIDI reading
   MIDI.read();
@@ -208,11 +232,13 @@ void handleControlChange(byte channel, byte control, byte value) {
     }
     MIDI.sendControlChange(control, value, channel);
   }
-  if (channel == PROJECT_SWITCH_CHANNEL && control == CC_MASTER_FILTER && value == 0x00)  // If master filter pot is set to minimum
-  {
-    mode_patch_select = true;
-  } else {
-    mode_patch_select = false;
+  // Filter knob patch select (only if button mode disabled)
+  if (!USE_BUTTON_FOR_PATCH_SELECT) {
+    if (channel == PROJECT_SWITCH_CHANNEL && control == CC_MASTER_FILTER && value == 0x00) {
+      mode_patch_select = true;
+    } else {
+      mode_patch_select = false;
+    }
   }
 }
 
